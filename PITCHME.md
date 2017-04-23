@@ -52,6 +52,13 @@ spawn_link(Quitter, :run, [])
 
 #HSLIDE
 ```elixir
+spawn_link(Quitter, :run, [])
+
+# След няколко секунди ще има грешка
+```
+
+#HSLIDE
+```elixir
 defmodule Quitter do
   def run_no_error do
     Process.sleep(3000)
@@ -78,7 +85,7 @@ pid = spawn_link(Quitter, :run, [])
 
 Process.unlink(pid)
 
-# Няна грешка
+# Няма грешка
 ```
 
 #HSLIDE
@@ -102,6 +109,23 @@ defmodule Simple do
     end
   end
 end
+```
+
+#HSLIDE
+```elixir
+send(pid1, {:link, pid2}) # {:link, #PID<0.272.0>}
+send(pid2, {:link, pid3}) # {:link, #PID<0.274.0>}
+send(pid3, {:link, pid4}) # {:link, #PID<0.276.0>}
+send(pid4, {:link, pid5}) # {:link, #PID<0.278.0>}
+```
+
+#HSLIDE
+```elixir
+send(pid1, :links) # {:links, [#PID<0.272.0>]}
+send(pid2, :links) # {:links, [#PID<0.270.0>, #PID<0.274.0>]}
+send(pid3, :links) # {:links, [#PID<0.272.0>, #PID<0.276.0>]}
+send(pid4, :links) # {:links, [#PID<0.274.0>, #PID<0.278.0>]}
+send(pid5, :links) # {:links, [#PID<0.276.0>]}
 ```
 
 #HSLIDE
@@ -161,27 +185,32 @@ end
 ```
 
 #HSLIDE
-### Случай 1 : При 'action = fn -> :nothing end'
+### Случай 1 :
+При 'action = fn -> :nothing end'
 1. При 'system_process = false' : Нищо. Текущият процес чака.
 2. При 'system_process = true'  : Ще видим '{'EXIT', <pid>, :normal}'. Текущият процес продължава.
 
 #HSLIDE
-### Случай 2 : При 'action = fn -> exit(:stuff) end'
+### Случай 2 :
+При 'action = fn -> exit(:stuff) end'
 1. При 'system_process = false' : Текущият процес умира.
 2. При 'system_process = true'  : Ще видим '{'EXIT', <pid>, :stuff}'. Текущият процес продължава.
 
 #HSLIDE
-### Случай 3 : При 'action = fn -> exit(:normal) end'
+### Случай 3 :
+При 'action = fn -> exit(:normal) end'
 1. При 'system_process = false' : Нищо. Текущият процес чака.
 2. При 'system_process = true'  : Ще видим '{'EXIT', <pid>, :normal}'. Текущият процес продължава.
 
 #HSLIDE
-### Случай 4 : При 'action = fn -> raise("Stuff") end'
+### Случай 4 :
+При 'action = fn -> raise("Stuff") end'
 1. При 'system_process = false' : Текущият процес умира.
 2. При 'system_process = true'  : Ще видим '{:EXIT, <pid>, {%RuntimeError{message: "Stuff"}....}'. Текущият процес продължава.
 
 #HSLIDE
-### Случай 5 : При 'action = fn -> throw("Stuff") end'
+### Случай 5 :
+При 'action = fn -> throw("Stuff") end'
 1. При 'system_process = false' : Текущият процес умира.
 2. При 'system_process = true'  : Ще видим '{:EXIT, <pid>, {{:nocatch, "Stuff"}, [...]}}'. Текущият процес продължава.
 
@@ -228,7 +257,6 @@ end
 defmodule HiPrinter do
   def start_link do
     Process.flag(:trap_exit, true)
-
     print()
   end
 
@@ -238,7 +266,6 @@ defmodule HiPrinter do
     after
       6000 -> IO.puts("Hi!")
     end
-
     print()
   end
 end
@@ -279,7 +306,8 @@ end
 ```
 
 #HSLIDE
-### Случай 1 : При 'action = fn -> Process.sleep(20_000) end' и 'status = :normal'
+### Случай 1 :
+При 'action = fn -> Process.sleep(20_000) end' и 'status = :normal'
 1. При 'system_process = false' : Нищо. Текущият процес чака.
 2. При 'system_process = true'  : Нищо. Текущият процес чака.
 
@@ -288,22 +316,26 @@ end
 
 
 #HSLIDE
-### Случай 2 : При 'action = fn -> Process.sleep(20_000) end' и 'status = :stuff'
+### Случай 2 :
+При 'action = fn -> Process.sleep(20_000) end' и 'status = :stuff'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
 2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', <pid>, :stuff}'.
 
 #HSLIDE
-### Случай 3 : При 'action = fn -> Process.sleep(20_000) end' и 'status = :kill'
+### Случай 3 :
+При 'action = fn -> Process.sleep(20_000) end' и 'status = :kill'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
 2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', <pid>, :killed}'.
 
 #HSLIDE
-### Случай 4 : При 'action = fn -> Process.exit(self(), :kill) end' и 'status = <каквото-и-да-е>'
+### Случай 4 :
+При 'action = fn -> Process.exit(self(), :kill) end' и 'status = <каквото-и-да-е>'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
 2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', <pid>, :killed}'.
 
 #HSLIDE
-### Случай 5 : При 'action = fn -> exit(:kill) end' и 'status = <каквото-и-да-е>'
+### Случай 5 :
+При 'action = fn -> exit(:kill) end' и 'status = <каквото-и-да-е>'
 1. При 'system_process = fals' : Грешка. Текущият процес 'умира'.
 2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', <pid>, :kill}'. Странно, нали?
 
@@ -344,7 +376,7 @@ receive do
   msg -> IO.inspect(msg)
 end
 # След 3 секунди ще получим нещо такова
-# {:DOWN, #Reference<0.0.3.3915>, :process, #PID<0.348.0>, :normal}
+# {:DOWN, #Reference<...>, :process, #PID<...>, :normal}
 ```
 
 #HSLIDE
@@ -375,6 +407,7 @@ end
 
 #HSLIDE
 * Има и версия на spawn, която създава нов процес и автоматично му добавя монитор:
+
 ```elixir
 {pid, ref} = spawn_monitor(fn -> Process.sleep(3000) end)
 Process.exit(pid, :kill)
@@ -413,7 +446,7 @@ Agent.get(pid, fn v -> v end)
 
 #HSLIDE
 ## Типове и поведения
-![Image-Absolute](assets/agents-agent-smithmatrix.jpg)
+![Image-Absolute](assets/types-of-lighting.jpg)
 
 #HSLIDE
 ### Типове
