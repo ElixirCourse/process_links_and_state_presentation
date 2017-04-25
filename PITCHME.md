@@ -188,19 +188,19 @@ end
 ### Случай 1 :
 При 'action = fn -> :nothing end'
 1. При 'system_process = false' : Нищо. Текущият процес чака.
-2. При 'system_process = true'  : Ще видим '{'EXIT', pid, :normal}'. Текущият процес продължава.
+2. При 'system_process = true'  : Ще видим '{:EXIT, pid, :normal}'. Текущият процес продължава.
 
 #HSLIDE
 ### Случай 2 :
 При 'action = fn -> exit(:stuff) end'
 1. При 'system_process = false' : Текущият процес умира.
-2. При 'system_process = true'  : Ще видим '{'EXIT', pid, :stuff}'. Текущият процес продължава.
+2. При 'system_process = true'  : Ще видим '{:EXIT, pid, :stuff}'. Текущият процес продължава.
 
 #HSLIDE
 ### Случай 3 :
 При 'action = fn -> exit(:normal) end'
 1. При 'system_process = false' : Нищо. Текущият процес чака.
-2. При 'system_process = true'  : Ще видим '{'EXIT', pid, :normal}'. Текущият процес продължава.
+2. При 'system_process = true'  : Ще видим '{:EXIT, pid, :normal}'. Текущият процес продължава.
 
 #HSLIDE
 ### Случай 4 :
@@ -298,7 +298,7 @@ status = <?>
 Process.flag(:trap_exit, system_process)
 pid = spawn_link(action)
 
-exit(pid, status)
+Process.exit(pid, status)
 
 receive do
   msg -> IO.inspect(msg)
