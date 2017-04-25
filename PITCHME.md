@@ -319,38 +319,23 @@ end
 ### Случай 2 :
 При 'action = fn -> Process.sleep(20_000) end' и 'status = :stuff'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
-2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', pid, :stuff}'.
+2. При 'system_process = true'  : Получаваме съобщение '{:EXIT, pid, :stuff}'.
 
 #HSLIDE
 ### Случай 3 :
 При 'action = fn -> Process.sleep(20_000) end' и 'status = :kill'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
-2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', pid, :killed}'.
+2. При 'system_process = true'  : Получаваме съобщение '{:EXIT, pid, :killed}'.
 
 #HSLIDE
 ### Случай 4 :
 При 'action = fn -> Process.exit(self(), :kill) end' и 'status = <каквото-и-да-е>'
 1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
-2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', pid, :killed}'.
-
-#HSLIDE
-### Случай 5 :
-При 'action = fn -> exit(:kill) end' и 'status = <каквото-и-да-е>'
-1. При 'system_process = false' : Грешка. Текущият процес 'умира'.
-2. При 'system_process = true'  : Получаваме съобщение '{'EXIT', pid, :kill}'. Странно, нали?
+2. При 'system_process = true'  : Получаваме съобщение '{:EXIT, pid, :killed}'.
 
 #HSLIDE
 * exit(:reason) е различен от Process.exit(pid, :reason).
 * exit(:reason) е нещо като throw, предизвиква 'хвърляне', което, ако не е хванато, 'убива' текущия процес.
-
-#HSLIDE
-* Когато два процеса са свързани, от тази грешка се произвежда сигнал със съобщение :reason, който ги 'убива'.
-* Ако тази причина е :kill, тя се променя на :killed, за да не убива системни процеси, които са свързани.
-
-#HSLIDE
-* В случай 5 exit(:kill) може да бъде хванат с catch в процеса-източник.
-* Не е хванат, затова процесът 'умира' с причина 'kill'.
-* Свързаният системен процес получава сигнал 'killed' със съобщение оригиналната 'exit' причина - 'kill', а не 'kill'-сигнал.
 
 #HSLIDE
 ## Наблюдение на процеси
